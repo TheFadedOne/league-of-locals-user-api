@@ -32,7 +32,7 @@ class UserProfileController(
     fun deleteUserProfile(@PathVariable userId: UUID): ResponseEntity<Void> {
 
         return if (userProfileRepository.existsById(userId)) {
-            userProfileRepository.deleteById(userId)
+            userService.deleteUser(userId)
             ResponseEntity.noContent().build()
         } else {
             ResponseEntity.notFound().build()

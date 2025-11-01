@@ -6,6 +6,7 @@ import com.leagueoflocals.leagueoflocals_user_api.controller.CreateProfileReques
 import com.leagueoflocals.leagueoflocals_user_api.model.UserProfile
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.util.UUID
 
 @Service
 class UserService(
@@ -24,5 +25,16 @@ class UserService(
         )
 
         return userProfileRepository.save(newUserProfile)
+    }
+
+    @Transactional
+    fun deleteUser(userId: UUID) {
+
+        val profile = userProfileRepository.findById(userId)
+            .orElseThrow { Error("Delete attempt: User not found") }
+
+        auth0ManagementClient.deleteUser(profile.auth0UserId)
+
+        userProfileRepository.delete(profile)
     }
 }

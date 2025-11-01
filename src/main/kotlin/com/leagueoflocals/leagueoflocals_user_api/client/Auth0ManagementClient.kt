@@ -15,13 +15,15 @@ class Auth0ManagementClient(
 
     @Value("\${auth0.domain}") private val domain: String,
     @Value("\${auth0.client-id}") private val clientId: String,
-    @Value("\${auth0.client-secret}") private val clientSecret: String
+    @Value("\${auth0.client-secret}") private val clientSecret: String,
+    webClientBuilder: WebClient.Builder,
+    private val scheme: String = "https"
 ) {
-    private val webClient = WebClient.builder().build()
+    private val webClient = webClientBuilder.build();
 
     fun createUser(email: String, password: String, username: String): Auth0User {
         val token = tokenService.getManagementApiToken()
-        val usersUrl = "https://$domain/api/v2/users"
+        val usersUrl = "$scheme://$domain/api/v2/users"
 
         val request = Auth0CreateUserRequest(
             email = email,
@@ -38,6 +40,18 @@ class Auth0ManagementClient(
             .retrieve()
             .bodyToMono<Auth0User>()
             .block() ?: throw IllegalStateException("Failed to create user in Auth0")
+    }
+
+    fun deleteUser(auth0UserId: String): Void? {
+        val token = tokenService.getManagementApiToken()
+        val deleteUserUrl = "$scheme://$domain/api/v2/users/$auth0UserId"
+
+        return webClient.delete()
+            .uri(deleteUserUrl)
+            .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+            .retrieve()
+            .bodyToMono<Void>()
+            .block()
     }
 }
 

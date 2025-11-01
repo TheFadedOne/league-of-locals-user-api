@@ -13,8 +13,10 @@ import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.given
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import java.util.*
+import kotlin.toString
 
 @ExtendWith(MockitoExtension::class)
 class UserServiceTest {
@@ -86,6 +88,29 @@ class UserServiceTest {
         }
 
         verify(auth0ManagementClient).createUser(request.email, request.password, request.username)
-        verify(userProfileRepository, org.mockito.kotlin.never()).save(any<UserProfile>())
+        verify(userProfileRepository, never()).save(any<UserProfile>())
     }
+
+    @Test
+    fun `when deleteUser is called, it will delete the user profile from the database and Auth0`() {
+        val user_id = UUID.randomUUID();
+        val auth0UserId = "auth0|12345"
+        val userProfile = UserProfile(
+            userId = user_id,
+            auth0UserId = auth0UserId,
+            username = "testuser",
+            homeCity = "Chicago",
+            sex = "Male",
+            lifetimeRaces = 0,
+        );
+
+        userService.deleteUser(user_id)
+        verify(userProfileRepository).deleteById(user_id)
+
+        val exists = userProfileRepository.findAll().any { it.userId == user_id }
+        assertThat(exists).isFalse
+
+        verify(auth0ManagementClient)
+    }
+
 }
